@@ -5,8 +5,7 @@ import os
 import time
 
 # Set the OpenAI API key
-openai.api_key = os.environ.get("OPENAI_API_KEY", 'your_default_api_key')
-
+openai.api_key = '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'
 # Define the impersonated role with instructions
 impersonated_role = """
     As Dr. AI, assist patients in Arabic with symptom checking, medication details, treatment options, finding doctors and hospitals, and scheduling appointments.
