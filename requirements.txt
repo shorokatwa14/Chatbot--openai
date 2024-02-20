@@ -1,0 +1,11 @@
+flask==3.0.2
+openai==0.28.0
+click
+Flask
+gunicorn
+importlib-metadata
+itsdangerous
+Jinja2
+MarkupSafe
+Werkzeug
+zipp
