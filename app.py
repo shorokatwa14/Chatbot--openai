@@ -76,7 +76,7 @@ def get_response(userText):
     return chat(userText)
 
 # API endpoint for the bot response
-@app.route("/api/get_response", methods=["POST"])
+@app.route("/get_response", methods=["GET","POST"])
 def api_get_response():
     try:
         user_text = request.json.get('msg')
