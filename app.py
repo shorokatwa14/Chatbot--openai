@@ -1,43 +1,43 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 import openai
-import os
+import sqlite3
 import time
 
 # Set the OpenAI API key
 openai.api_key = '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'
+
 # Define the impersonated role with instructions
 impersonated_role = """
     As Dr. AI, assist patients in Arabic with symptom checking, medication details, treatment options, finding doctors and hospitals, and scheduling appointments.
    Be friendly and knowledgeable. Only answer medical questions; respond with "I don't know" for non-medical queries.
    Prioritize patient privacy, use Arabic, and create an enjoyable and informative healthcare experience.
 """
+name = 'Bot'
+# Function to get the SQLite connection
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect('chat_history.db')
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
-# Initialize variables for chat history
-explicit_input = ""
-chatgpt_output = 'Chat log: /n'
-cwd = os.getcwd()
-i = 1
-
-# Find an available chat history file
-while os.path.exists(os.path.join(cwd, f'chat_history{i}.txt')):
-    i += 1
-
-history_file = os.path.join(cwd, f'chat_history{i}.txt')
-
-# Create a new chat history file
-with open(history_file, 'w') as f:
-    f.write('\n')
-
-# Initialize chat history
-chat_history = ''
-
-# Create a Flask web application
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# Function to close the SQLite connection
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 # Function to complete chat input using OpenAI's GPT-3.5 Turbo
-def chatcompletion(user_input, impersonated_role, explicit_input, chat_history):
+def chatcompletion(user_input, impersonated_role, cursor):
+    # Retrieve chat history from the database
+    cursor.execute('SELECT * FROM chat_history ORDER BY id DESC LIMIT 5')  # Adjust the query as needed
+    rows = cursor.fetchall()
+
+    # Build conversation history from the retrieved rows
+    chat_history = ""
+    for row in reversed(rows):
+        chat_history += f"{row['timestamp']} User: {row['user_input']} {row['timestamp']} {name}: {row['chatgpt_output']}\n"
+
     output = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0301",
         temperature=1,
@@ -45,41 +45,44 @@ def chatcompletion(user_input, impersonated_role, explicit_input, chat_history):
         frequency_penalty=0,
         messages=[
             {"role": "system", "content": f"{impersonated_role}. Conversation history: {chat_history}"},
-            {"role": "user", "content": f"{user_input}. {explicit_input}"},
+            {"role": "user", "content": f"{user_input}"},
         ]
     )
 
-    for item in output['choices']:
-        chatgpt_output = item['message']['content']
-
-    return chatgpt_output
-
-name = ' bot'
+    return output['choices'][0]['message']['content']
 
 # Function to handle user chat input
 def chat(user_input):
-    global chat_history, name, chatgpt_output
-    current_day = time.strftime("%d/%m", time.localtime())
-    current_time = time.strftime("%H:%M:%S", time.localtime())
-    chat_history += f'\nUser: {user_input}\n'
-    chatgpt_raw_output = chatcompletion(user_input, impersonated_role, explicit_input, chat_history).replace(f'{name}:', '')
-    chatgpt_output = f'{name}: {chatgpt_raw_output}'
-    chat_history += chatgpt_output + '\n'
-    with open(history_file, 'a') as f:
-        f.write('\n'+ current_day+ ' '+ current_time+ ' User: ' +user_input +' \n' + current_day+ ' ' + current_time+  ' ' +  chatgpt_output + '\n')
-        f.close()
-    return chatgpt_raw_output
+    global name
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+    # Retrieve database cursor
+    db = get_db()
+    cursor = db.cursor()
+
+    # Save chat history to the database
+    chatgpt_output = chatcompletion(user_input, impersonated_role, cursor)
+    
+    cursor.execute('''
+        INSERT INTO chat_history (timestamp, user_input, chatgpt_output)
+        VALUES (?, ?, ?)
+    ''', (current_time, user_input, chatgpt_output))
+    
+    db.commit()
+
+    return chatgpt_output
+
+# Create a Flask web application
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+app.teardown_appcontext(close_db)  # Close the SQLite connection after each request
 
 # Flask route to handle chat requests
-def get_response(userText):
-    return chat(userText)
-
-# API endpoint for the bot response
-@app.route("/get_response", methods=["GET","POST"])
+@app.route("/api/get_response", methods=["POST"])
 def api_get_response():
     try:
         user_text = request.json.get('msg')
-        response = get_response(user_text)
+        response = chat(user_text)
         return jsonify({"response": response})
     except Exception as e:
         return jsonify({"error": str(e)})
