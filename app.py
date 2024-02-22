@@ -78,7 +78,7 @@ CORS(app)  # Enable CORS for all routes
 app.teardown_appcontext(close_db)  # Close the SQLite connection after each request
 
 # Flask route to handle chat requests
-@app.route("/api/get_response", methods=["POST"])
+@app.route("/get_response", methods=["POST"])
 def api_get_response():
     try:
         user_text = request.json.get('msg')
