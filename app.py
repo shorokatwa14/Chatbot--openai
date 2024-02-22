@@ -43,7 +43,6 @@ def chatcompletion(user_input, impersonated_role, explicit_input, chat_history):
         temperature=1,
         presence_penalty=0,
         frequency_penalty=0,
-        max_tokens=2000,
         messages=[
             {"role": "system", "content": f"{impersonated_role}. Conversation history: {chat_history}"},
             {"role": "user", "content": f"{user_input}. {explicit_input}"},
