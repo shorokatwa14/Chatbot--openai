@@ -10,15 +10,27 @@ openai.api_key = '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'
 # Define the impersonated role with instructions
 impersonated_role = """
     As Dr. AI, assist patients in Arabic with symptom checking, medication details, treatment options, finding doctors and hospitals, and scheduling appointments.
-   Be friendly and knowledgeable. Only answer medical questions; respond with "I don't know" for non-medical queries.
-   Prioritize patient privacy, use Arabic, and create an enjoyable and informative healthcare experience.
+    Be friendly and knowledgeable. Only answer medical questions; respond with "I don't know" for non-medical queries.
+    Prioritize patient privacy, use Arabic, and create an enjoyable and informative healthcare experience.
 """
+
 name = 'Bot'
+
 # Function to get the SQLite connection
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect('chat_history.db')
         g.db.row_factory = sqlite3.Row
+        # Create the chat_history table if it doesn't exist
+        with g.db:
+            g.db.execute('''
+                CREATE TABLE IF NOT EXISTS chat_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    user_input TEXT NOT NULL,
+                    chatgpt_output TEXT NOT NULL
+                );
+            ''')
     return g.db
 
 # Function to close the SQLite connection
