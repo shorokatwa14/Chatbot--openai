@@ -24,3 +24,30 @@ Dr. AI is a Flask application that implements a chatbot powered by OpenAI's GPT-
    ```bash
    git clone https://github.com/shorokatwa14/Chatbot--openai.git
    cd your-repository
+2.  Create a new virtual environment (replace `venv` with your preferred name):
+
+   ```bash
+   python -m venv venv
+```
+3. Activate the virtual environment
+
+    - **On Windows:**
+
+        ```bash
+        venv\Scripts\activate
+        ```
+
+    - **On macOS and Linux:**
+
+        ```bash
+        source venv/bin/activate
+      ```
+   4. Install Dependencies
+      ```bash
+      pip install -r requirements.txt
+
+      ```
+   5. run app (open terminal)
+      ```bash
+      python app.py
+      ```
