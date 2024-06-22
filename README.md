@@ -43,7 +43,7 @@ Dr. AI is a Flask application that implements a chatbot powered by OpenAI's GPT-
         source venv/bin/activate
          ```
 4. Install Dependencies
-         ```bash
+   ```bash
       pip install -r requirements.txt
 
          ```
