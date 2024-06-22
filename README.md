@@ -51,4 +51,4 @@ Dr. AI is a Flask application that implements a chatbot powered by OpenAI's GPT-
 5. run app (open terminal)
       ```bash
          python app.py
- ```
+   ```
