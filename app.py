@@ -5,7 +5,7 @@ import sqlite3
 import time
 
 # Set the OpenAI API key
-openai.api_key = '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'
+openai.api_key = 'API_key'
 
 # Define the impersonated role with instructions
 impersonated_role = """
